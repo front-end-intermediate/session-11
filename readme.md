@@ -1535,3 +1535,170 @@ function app (state = {}, action){
 
 Donald Trump is suing us for defamation. We need to display a warning whenever we add him to our state.
 
+We could resolve this by creating a function:
+
+```js
+function checkAndDispatch (store, action) {
+  if (
+    action.type === ADD_WEAPON &&
+    action.weapon.name.toLowerCase().indexOf('trump') !== -1
+  ){
+    return alert('You\'re fired!')
+  }
+  if (
+    action.type === ADD_PIRATE &&
+    action.pirate.name.toLowerCase().indexOf('trump') !== -1
+  ){
+    return alert('You\'re fired!')
+  }
+  return store.dispatch(action)
+}
+```
+
+And then call it wherever we currently call `store.dispatch`:
+
+```js
+function addPirateToDom(pirate){
+  const node = document.createElement('li')
+  const text = document.createTextNode(pirate.name)
+  
+  const removeBtn = createRemoveButton(() => {
+    checkAndDispatch(store, removePirateAction(pirate.id))
+  })
+  
+  node.appendChild(text)
+  node.appendChild(removeBtn)
+  
+  node.style.textDecoration = pirate.complete ? 'line-through' : 'none'
+  node.addEventListener('click', () => {
+    checkAndDispatch(store, togglePirateAction(pirate.id))
+  })
+  
+  document.getElementById('pirates').appendChild(node)
+}
+
+function addWeaponToDom(weapon){
+  const node = document.createElement('li')
+  const text = document.createTextNode(weapon.name)
+  
+  const removeBtn = createRemoveButton( () => {
+    checkAndDispatch(store, removeWeaponAction(weapon.id))
+  })
+  
+  node.appendChild(text)
+  node.append(removeBtn)
+  
+  document.getElementById('weapons').appendChild(node)
+}
+
+function addPirate(){
+  const input = document.getElementById('pirate')
+  const name = input.value
+  input.value = ''
+  
+  checkAndDispatch(store, addPirateAction({
+    id: generateId(),
+    name,
+    complete: false,
+  }))
+}
+
+function addWeapon(){
+  const input = document.getElementById('weapon')
+  const name = input.value
+  input.value = ''
+  
+  checkAndDispatch(store, addWeaponAction({
+    id: generateId(),
+    name
+  }))
+}
+```
+
+A better way would be to hook into the mode between when an action is dispatched and when the reducer runs.
+
+## Redux Middleware
+
+Middleware is some code you can put between the framework receiving a request, and the framework generating a response. Can be used for error reporting and routing.
+
+`return next(action)`
+
+```js
+function checker (store) {
+  return function (next){
+    return function (action){
+      // middleware - copy from checkAndDispatch
+      if (
+      action.type === ADD_WEAPON &&
+      action.weapon.name.toLowerCase().indexOf('trump') !== -1
+      ){
+        return alert('You\'re fired!')
+      }
+      if (
+        action.type === ADD_PIRATE &&
+        action.pirate.name.toLowerCase().indexOf('trump') !== -1
+      ){
+        return alert('You\'re fired!')
+      }
+      return next(action) // new
+      }
+  }
+}
+```
+
+Currying
+
+Delete the checkAndDispatch function and replace the `checkAndDispatch(store,` code with what we had before: `store.dispatch(...)`.
+
+Tell Redux about the middleware.
+
+```js
+const store = Redux.createStore(Redux.combineReducers({
+  pirates,
+  weapons
+}))
+```
+
+```js
+const store = Redux.createStore(Redux.combineReducers({
+  pirates,
+  weapons
+}),Redux.applyMiddleware(checker))
+```
+
+ES6 version:
+
+```js
+const checker = (store) => (next) => (action) => {
+  if (
+  action.type === ADD_WEAPON &&
+  action.weapon.name.toLowerCase().indexOf('trump') !== -1
+  ){
+    return alert('You\'re fired!')
+  }
+  if (
+    action.type === ADD_PIRATE &&
+    action.pirate.name.toLowerCase().indexOf('trump') !== -1
+  ){
+    return alert('You\'re fired!')
+  }
+  return next(action)
+}
+```
+
+Here are some popular packages in the Redux ecosystem that are implemented via middleware.
+
+* [redux-api-middleware](https://github.com/agraboso/redux-api-middleware) - Redux middleware for calling an API.
+* [redux-logger](https://github.com/evgenyrodionov/redux-logger) - Logger middleware for Redux.
+* [redux-promise-middleware](https://github.com/pburtchaell/redux-promise-middleware) - Redux middleware for resolving and rejecting promises with conditional optimistic updates.
+* [redux-thunk](https://github.com/gaearon/redux-thunk) - Thunk middleware for Redux.
+* [redux-logic](https://github.com/jeffbski/redux-logic) - Redux middleware for organizing business logic and action side effects.
+* [redux-observable](https://github.com/redux-observable/redux-observable) - RxJS middleware for action side effects in Redux using "Epics".
+* [redux-test-recorder](https://github.com/conorhastings/redux-test-recorder) - Redux middleware to automatically generate tests for reducers through ui interaction.
+* [redux-reporter](https://github.com/ezekielchentnik/redux-reporter) - Report actions & metadata to 3rd party providers, extremely useful for analytics and error handling (New Relic, Sentry, Adobe DTM, Keen, etc.)
+* [redux-localstorage](https://github.com/elgerlambert/redux-localstorage) - Store enhancer that syncs (a subset) of your Redux store state to localstorage.
+* [redux-node-logger](https://github.com/low-ghost/redux-node-logger) - A Redux Logger for Node Environments
+* [redux-catch](https://github.com/sergiodxa/redux-catch) - Error catcher middleware for Redux reducers and middlewares
+* [redux-cookies-middleware](https://github.com/grofers/redux-cookies-middleware/) - a Redux middleware which syncs a subset of your Redux store state with cookies.
+* [redux-test-recorder](https://github.com/conorhastings/redux-test-recorder) - Redux test recorder is a redux middleware + included component for automagically generating tests for your reducers based on the actions in your app
+

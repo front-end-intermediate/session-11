@@ -43,20 +43,20 @@ function removeWeaponAction(id){
   }
 }
 
-function checkAndDispatch(store, action){
+const checker = (store) => (next) => (action) => {
   if (
-    action.type = ADD_WEAPON &&
-    action.weapon.name.toLowerCase().indexOf('trump') !== -1
+  action.type === ADD_WEAPON &&
+  action.weapon.name.toLowerCase().indexOf('trump') !== -1
   ){
     return alert('You\'re fired!')
   }
   if (
-    action.type = ADD_PIRATE &&
+    action.type === ADD_PIRATE &&
     action.pirate.name.toLowerCase().indexOf('trump') !== -1
   ){
     return alert('You\'re fired!')
   }
-  return store.dispatch(action)
+  return next(action)
 }
 
 // REDUCERS
@@ -89,7 +89,7 @@ function weapons (state = [], action) {
 const store = Redux.createStore(Redux.combineReducers({
   pirates,
   weapons
-}))
+}),Redux.applyMiddleware(checker))
 
 store.subscribe(() => {
   const { weapons, pirates } = store.getState()
@@ -116,7 +116,7 @@ function addPirateToDom(pirate){
   const text = document.createTextNode(pirate.name)
   
   const removeBtn = createRemoveButton(() => {
-    checkAndDispatch(store, removePirateAction(pirate.id))
+    store.dispatch(removePirateAction(pirate.id))
   })
   
   node.appendChild(text)
@@ -124,7 +124,7 @@ function addPirateToDom(pirate){
   
   node.style.textDecoration = pirate.complete ? 'line-through' : 'none'
   node.addEventListener('click', () => {
-    checkAndDispatch(store, togglePirateAction(pirate.id))
+    store.dispatch(togglePirateAction(pirate.id))
   })
   
   document.getElementById('pirates').appendChild(node)
@@ -135,7 +135,7 @@ function addWeaponToDom(weapon){
   const text = document.createTextNode(weapon.name)
   
   const removeBtn = createRemoveButton( () => {
-    checkAndDispatch(store, removeWeaponAction(weapon.id))
+    store.dispatch(removeWeaponAction(weapon.id))
   })
   
   node.appendChild(text)
@@ -149,7 +149,7 @@ function addPirate(){
   const name = input.value
   input.value = ''
   
-  checkAndDispatch(store, addPirateAction({
+  store.dispatch(addPirateAction({
     id: generateId(),
     name,
     complete: false,
@@ -161,7 +161,7 @@ function addWeapon(){
   const name = input.value
   input.value = ''
   
-  checkAndDispatch(store, addWeaponAction({
+  store.dispatch(addWeaponAction({
     id: generateId(),
     name
   }))
