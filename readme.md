@@ -5,6 +5,8 @@
 * make it as predictable as possible
 * uses "pure functions"
 
+UI is just a representation of state.
+
 ## Store
 
 The store should have four parts:
@@ -1313,13 +1315,153 @@ Create a new `index.html` in `test-one` with a link our scripts.
   </div>
 
   <script type='text/javascript' src="js/scripts.js"></script>
+    <script>
+    const store = createStore(app)
+    store.subscribe(() => {
+      console.log('The new state is: ', store.getState())
+    })
+
+    store.dispatch(addPirateAction({
+      id: 0,
+      name: 'Sammy Spade',
+      complete: false,
+    }))
+
+    store.dispatch(addPirateAction({
+      id: 1,
+      name: 'Pete Shelly',
+      complete: false,
+    }))
+
+    store.dispatch(addPirateAction({
+      id: 2,
+      name: 'Brian Eno',
+      complete: true,
+    }))
+
+    store.dispatch(removePirateAction(1))
+
+    store.dispatch(togglePirateAction(0))
+
+    store.dispatch(addWeaponAction({
+      id: 0,
+      name: 'Sword'
+    }))
+
+    store.dispatch(addWeaponAction({
+      id: 1,
+      name: 'Cannon'
+    }))
+
+    store.dispatch(removeWeaponAction(0))
+  </script>
 </body>
 </html>
 ```
 
-Paste the entire Quokka script into the script tag. Open the file in a browser and examine the console.
+Paste the entire Quokka script into the `scripts.js` file:
 
-Add to the DOM:
+```js
+const ADD_PIRATE = 'ADD_PIRATE'
+const REMOVE_PIRATE = 'REMOVE_PIRATE'
+const TOGGLE_PIRATE = 'TOGGLE_PIRATE'
+const ADD_WEAPON = 'ADD_WEAPON'
+const REMOVE_WEAPON = 'REMOVE_WEAPON'
+
+function addPirateAction(pirate){
+  return {
+    type: ADD_PIRATE,
+    pirate
+  }
+}
+function removePirateAction(id){
+  return {
+    type: REMOVE_PIRATE,
+    id
+  }
+}
+function togglePirateAction(id){
+  return {
+    type: TOGGLE_PIRATE,
+    id
+  }
+}
+function addWeaponAction(weapon){
+  return {
+    type: ADD_WEAPON,
+    weapon
+  }
+}
+function removeWeaponAction(id){
+  return {
+    type: REMOVE_WEAPON,
+    id
+  }
+}
+
+function pirates (state = [], action) {
+  switch(action.type) {
+    case ADD_PIRATE : // use the variable
+    return state.concat([action.pirate])
+    case REMOVE_PIRATE :
+    return state.filter((pirate) => pirate.id !== action.id)
+    case TOGGLE_PIRATE :
+    return state.map((pirate) => pirate.id !== action.id ? pirate :
+    Object.assign({}, pirate, {complete: !pirate.complete})
+    )
+    default :
+    return state
+  }
+}
+
+function weapons (state = [], action) {
+  switch(action.type) {
+    case ADD_WEAPON :
+    return state.concat([action.weapon])
+    case REMOVE_WEAPON :
+    return state.filter((weapon) => weapon.id !== action.id)
+    default :
+    return state
+  }
+}
+
+function app (state = {}, action){
+  return {
+    pirates: pirates(state.pirates, action),
+    weapons: weapons(state.weapons, action)
+  }
+}
+
+function createStore ( reducer ) {
+  
+  let state
+  let listeners = []
+  
+  const getState = () => state
+  
+  const subscribe = (listener) => {
+    listeners.push(listener)
+    return () => {
+      listeners = listeners.filter((l) => l !== listener)
+    }
+  }
+  
+  const dispatch = (action) => {
+    state = reducer(state, action)
+    listeners.forEach( (listener) => listener() )
+  }
+  
+  return {
+    getState,
+    subscribe,
+    dispatch
+  }
+}
+```
+
+Open the file in a browser and examine the console.
+
+Add to the DOM (after the header):
 
 ```html
 <div>
@@ -1337,9 +1479,15 @@ Add to the DOM:
 </div>
 ```
 
-At the bottom of the JS in index.html:
+In the JS block in `index.html`:
 
 ```js
+const store = createStore(app)
+
+store.subscribe(() => {
+  console.log('The new state is: ', store.getState())
+})
+
 function addPirate(){
   const input = document.getElementById('pirate')
   const name = input.value
@@ -1353,13 +1501,15 @@ function addPirate(){
 }
 ```
 
-Add an id generator at the top of the script:
+Add an id generator:
 
 ```js
 function generateId(){
   return Date.now()
 }
 ```
+
+Use it in `addWeapons()`:
 
 ```js
 function addWeapon(){
@@ -1384,9 +1534,9 @@ document.getElementById('weaponBtn')
 .addEventListener('click', addWeapon)
 ```
 
-Connect the state to UI
+The input fields should now be connected to the state.
 
-Comment out the current dispatches:
+<!-- Comment out the current dispatches: -->
 
 ```js
 // store.dispatch(addPirateAction({
@@ -1434,6 +1584,8 @@ store.subscribe(() => {
 })
 ```
 
+<!-- Let's separate pirates and weapons. -->
+
 ```js
 store.subscribe(() => {
   const { weapons, pirates } = store.getState()
@@ -1442,7 +1594,9 @@ store.subscribe(() => {
 })
 ```
 
-Test.
+And test.
+
+## Add Elements to the DOM
 
 Loop over the items and throw them into the DOM.
 
@@ -1454,10 +1608,6 @@ store.subscribe(() => {
   pirates.forEach(addPirateToDom)
   weapons.forEach(addWeaponToDom)
 })
-
-function addPirateToDom(pirate){
-
-}
 
 function addWeaponToDom(weapon){
   const node = document.createElement('li')
@@ -1478,7 +1628,7 @@ function addPirateToDom(pirate){
 }
 ```
 
-Try adding a second pirate. Eveytime we add an itiem we append the previous items.
+Try adding a second pirate. Eveytime we add an item we are appending the previous items.
 
 We need to clear the list.
 
@@ -1494,7 +1644,11 @@ store.subscribe(() => {
 })
 ```
 
-Toggle pirates as seen.
+## Toggle Pirate
+
+Recall that only pirates have the complete property. In our example it is intended to be used to toggle pirates as seen.
+
+Let add the toggle functionality to `addPirateToDom()` with a ternary operator:
 
 ```js
 function addPirateToDom(pirate){
@@ -1511,9 +1665,9 @@ function addPirateToDom(pirate){
 }
 ```
 
-Our UI is just a representation of our state.
-
 ## Dispatching Remove Items
+
+Create a new function that returns a button.
 
 ```js
 function createRemoveButton(onClick){
@@ -1525,17 +1679,19 @@ function createRemoveButton(onClick){
 }
 ```
 
+We'll use it in `addPirateToDom()` first:
+
 ```js
 function addPirateToDom(pirate){
   const node = document.createElement('li')
   const text = document.createTextNode(pirate.name)
 
-  const removeBtn = createRemoveButton(() => {
+  const removeBtn = createRemoveButton(() => { // create the button
     store.dispatch(removePirateAction(pirate.id))
   })
 
   node.appendChild(text)
-  node.appendChild(removeBtn)
+  node.appendChild(removeBtn) // append it to the dom
 
   node.style.textDecoration = pirate.complete ? 'line-through' : 'none'
   node.addEventListener('click', () => {
@@ -1546,7 +1702,7 @@ function addPirateToDom(pirate){
 }
 ```
 
-Do the same for weapons.
+Do the same for `addWeaponToDom()`:
 
 ```js
 function addWeaponToDom(weapon){
@@ -1564,7 +1720,103 @@ function addWeaponToDom(weapon){
 }
 ```
 
+Here is the complete DOM scripting portion of this exercise:
+
+```html
+<script>
+  const store = createStore(app)
+
+  document.getElementById('pirateBtn')
+  .addEventListener('click', addPirate)
+  
+  document.getElementById('weaponBtn')
+  .addEventListener('click', addWeapon)
+  
+  function generateId(){
+    return Date.now()
+  }
+  
+  store.subscribe(() => {
+    const { weapons, pirates } = store.getState()
+
+    document.getElementById('pirates').innerHTML = ''
+    document.getElementById('weapons').innerHTML = ''
+
+    pirates.forEach(addPirateToDom)
+    weapons.forEach(addWeaponToDom)
+  })
+  
+  function addPirateToDom(pirate){
+    const node = document.createElement('li')
+    const text = document.createTextNode(pirate.name)
+
+    const removeBtn = createRemoveButton(() => {
+      store.dispatch(removePirateAction(pirate.id))
+    })
+
+    node.appendChild(text)
+    node.appendChild(removeBtn)
+
+    node.style.textDecoration = pirate.complete ? 'line-through' : 'none'
+    node.addEventListener('click', () => {
+      store.dispatch(togglePirateAction(pirate.id))
+    })
+
+    document.getElementById('pirates').appendChild(node)
+  }
+  
+  function addWeaponToDom(weapon){
+    const node = document.createElement('li')
+    const text = document.createTextNode(weapon.name)
+
+    const removeBtn = createRemoveButton( () => {
+      store.dispatch(removeWeaponAction(weapon.id))
+    })
+
+    node.appendChild(text)
+    node.append(removeBtn)
+
+    document.getElementById('weapons').appendChild(node)
+  }
+  
+  function addPirate(){
+    const input = document.getElementById('pirate')
+    const name = input.value
+    input.value = ''
+
+    store.dispatch(addPirateAction({
+      id: generateId(),
+      name,
+      complete: false,
+    }))
+  }
+  
+  function addWeapon(){
+    const input = document.getElementById('weapon')
+    const name = input.value
+    input.value = ''
+
+    store.dispatch(addWeaponAction({
+      id: generateId(),
+      name
+    }))
+  }
+  
+  function createRemoveButton(onClick){
+    const removeBtn = document.createElement('button')
+    removeBtn.innerHTML = 'x'
+    removeBtn.addEventListener('click', onClick)
+
+    return removeBtn
+  }
+</script>
+```
+
 Congratulations! You have just created [Redux](https://redux.js.org/).
+
+Let's test that statement.
+
+Add this to the head of the html file.
 
 ```html
 <script src='https://cdnjs.cloudflare.com/ajax/libs/redux/3.7.2/redux.min.js'></script>
@@ -1600,31 +1852,34 @@ function createStore ( reducer ) {
 }
 ```
 
-Instead of creating our store we will create a Redux store:
+Now, instead of creating our store we will create a Redux store:
 
 ```js
 const store = Redux.createStore(app)
 ```
 
-The root reducer is also part of Redux.
+The root reducer is also provided by Redux. Delete the reducer in our scripts file:
 
 ```js
+// function app (state = {}, action){
+//   return {
+//     pirates: pirates(state.pirates, action),
+//     weapons: weapons(state.weapons, action)
+//   }
+// }
+```
+
+And edit our Redux store in the DOM script:
+
+```js
+// const store = Redux.createStore(app)
 const store = Redux.createStore(Redux.combineReducers({
   pirates,
   weapons
 }))
 ```
 
-Delete the main reducer:
-
-```js
-function app (state = {}, action){
-  return {
-    pirates: pirates(state.pirates, action),
-    weapons: weapons(state.weapons, action)
-  }
-}
-```
+## Redux Middleware
 
 Donald Trump is suing us for defamation. We need to display a warning whenever we add him to our state.
 
@@ -1648,7 +1903,7 @@ function checkAndDispatch (store, action) {
 }
 ```
 
-And then call it wherever we currently call `store.dispatch`:
+And then call it wherever we currently call `store.dispatch` in the DOM scripts:
 
 ```js
 function addPirateToDom(pirate){
@@ -1708,11 +1963,9 @@ function addWeapon(){
 }
 ```
 
-A better way would be to hook into the mode between when an action is dispatched and when the reducer runs.
+A better way would be to hook into the moment between when an action is dispatched and when the reducer runs. For this we'll use [Redux Middleware](https://redux.js.org/advanced/middleware).
 
-## Redux Middleware
-
-Middleware is some code you can put between the framework receiving a request, and the framework generating a response. Can be used for error reporting and routing.
+Middleware is code you can put between the framework receiving a request, and the framework generating a response. It can be used for error reporting and routing.
 
 `return next(action)`
 
@@ -1739,7 +1992,7 @@ function checker (store) {
 }
 ```
 
-Currying
+[Currying](https://hackernoon.com/currying-in-js-d9ddc64f162e) - the process of breaking down a function into a series of functions that each take a single argument.
 
 Delete the checkAndDispatch function and replace the `checkAndDispatch(store,` code with what we had before: `store.dispatch(...)`.
 
@@ -1759,7 +2012,9 @@ const store = Redux.createStore(Redux.combineReducers({
 }),Redux.applyMiddleware(checker))
 ```
 
-ES6 version:
+And test in the browser.
+
+Here's an ES6 version that leverages the arrow function and its implicit return:
 
 ```js
 const checker = (store) => (next) => (action) => {
