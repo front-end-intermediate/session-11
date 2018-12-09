@@ -1723,3 +1723,536 @@ const store = Redux.createStore(Redux.combineReducers({
   weapons
 }), Redux.applyMiddleware(checker, logger))
 ```
+
+## Adding React
+
+```html
+<script src='https://unpkg.com/react@16.3.0-alpha.1/umd/react.development.js'></script>
+<script src='https://unpkg.com/react-dom@16.3.0-alpha.1/umd/react-dom.development.js'></script>
+<script src='https://unpkg.com/babel-standalone@6.15.0/babel.min.js'></script>
+```
+
+```html
+<hr />
+<div id="app"></div>
+...
+<script type="text/babel" src="js/react-babel.js"></script>
+```
+
+Implement the main component.
+
+```js
+class App extends React.Component {
+  render(){
+    return(
+      <React.Fragment>
+        React app
+      </React.Fragment>
+    )
+  }
+}
+
+ReactDOM.render(
+  <App />,
+  document.getElementById('app')
+)
+```
+
+Add List, Weapons and Pirates components and render them via the App.
+
+```js
+function List (props) {
+  return (
+    <ul>
+    <li>list</li>
+    </ul>
+  )
+}
+
+class Pirates extends React.Component {
+  render() {
+    return (
+      <React.Fragment>
+        Pirates
+        <List />
+      </React.Fragment>
+    )
+  }
+}
+
+class Weapons extends React.Component {
+  render() {
+    return (
+      <React.Fragment>
+        Weapons
+        <List />
+      </React.Fragment>
+    )
+  }
+}
+
+class App extends React.Component {
+  render(){
+    return(
+      <React.Fragment>
+        <Pirates />
+        <Weapons />
+      </React.Fragment>
+    )
+  }
+}
+
+ReactDOM.render(
+  <App />,
+  document.getElementById('app')
+)
+```
+
+## Adding Items
+
+Recall the `addPirate` function in the vanilla js portion:
+
+```js
+function addPirate(){
+  const input = document.getElementById('pirate')
+  const name = input.value
+  input.value = ''
+  
+  store.dispatch(addPirateAction({
+    id: generateId(),
+    name,
+    complete: false,
+  }))
+}
+```
+
+Implement this is the Pirates component.
+
+First the return:
+
+```js
+class Pirates extends React.Component {
+  render() {
+    return (
+      <React.Fragment>
+        <h1>Pirate List</h1>
+        <input
+          type='text'
+          placeholder='Add Pirate'
+          ref={ (input) => this.input = input }
+          />
+          <button onClick={this.addItem}>Add Pirate</button>
+        <List />
+      </React.Fragment>
+    )
+  }
+}
+```
+
+Then the addItem function:
+
+```js
+class Pirates extends React.Component {
+  addItem = (e) => {
+    e.preventDefault()
+    const name = this.input.value
+    this.input.value = ''
+    this.props.store.dispatch()
+  }
+  render() {
+    return (
+      <React.Fragment>
+        <h1>Pirate List</h1>
+        <input
+          type='text'
+          placeholder='Add Pirate'
+          ref={ (input) => this.input = input }
+          />
+          <button onClick={this.addItem}>Add Pirate</button>
+        <List />
+      </React.Fragment>
+    )
+  }
+}
+```
+
+Pass props to the Pirate component from App
+
+```js
+class App extends React.Component {
+  render(){
+    return(
+      <React.Fragment>
+        <Pirates store ={this.props.store} />
+        <Weapons />
+      </React.Fragment>
+    )
+  }
+}
+
+ReactDOM.render(
+  <App store={store} />,
+  document.getElementById('app')
+)
+```
+
+Complete the addItem function
+
+```js
+  addItem = (e) => {
+    e.preventDefault()
+    const name = this.input.value
+    this.input.value = ''
+    this.props.store.dispatch(addPirateAction({
+      id: generateId,
+      name,
+      complete: false
+    }))
+  }
+```
+
+The weapons component.
+
+```js
+class App extends React.Component {
+  render(){
+    return(
+      <React.Fragment>
+        <Pirates store ={this.props.store} />
+        <Weapons store ={this.props.store} />
+      </React.Fragment>
+    )
+  }
+}
+```
+
+```js
+class Weapons extends React.Component {
+  render() {
+    return (
+      <React.Fragment>
+        <h1>Weapon List</h1>
+        <input 
+          type='text'
+          placeholder='Add Weapon'
+          ref={ (input) => this.input = input }
+          />
+          <button onClick={this.addItem}>Add Weapon</button>
+        <List />
+      </React.Fragment>
+    )
+  }
+}
+```
+
+Add the same addItem function:
+
+```js
+class Weapons extends React.Component {
+
+  addItem = (e) => {
+    e.preventDefault()
+    const name = this.input.value
+    this.input.value = ''
+    this.props.store.dispatch(addWeaponAction({
+      id: generateId,
+      name
+    }))
+  }
+
+  render() {
+    return (
+      <React.Fragment>
+        <h1>Weapon List</h1>
+        <input 
+          type='text'
+          placeholder='Add Weapon'
+          ref={ (input) => this.input = input }
+          />
+          <button onClick={this.addItem}>Add Weapon</button>
+        <List />
+      </React.Fragment>
+    )
+  }
+}
+```
+
+Rendering the Lists
+
+Grab the Pirates and the Weapons and pass them to the components:
+
+```js
+class App extends React.Component {
+  render(){
+    const { store } = this.props
+    const { pirates, weapons } = store.getState()
+    return(
+      <React.Fragment>
+        <Pirates pirates={pirates} store ={store} />
+        <Weapons weapons={weapons} store ={store} />
+      </React.Fragment>
+    )
+  }
+}
+```
+
+Pirates component
+
+```js
+<List
+items={this.props.pirates}/>
+```
+
+Weapons component"
+
+```js
+<List
+items={this.props.weapons}/>
+```
+
+List
+
+```js
+function List (props) {
+  return (
+    <ul>
+      {props.item.map((item) => (
+        <li key={item.id}>
+          <span>
+            {item.name}
+          </span>
+        </li>
+      ))}
+    </ul>
+  )
+}
+```
+
+App
+
+We want to cause a re-render by using setState. But we do not have any state inside the component. We will use forceUpdate:
+
+```js
+class App extends React.Component {
+
+  componentDidMount () {
+    const { store } = this.props
+    store.subscribe( () => this.forceUpdate())
+  }
+
+  render(){
+    const { store } = this.props
+    const { pirates, weapons } = store.getState()
+    return(
+      <React.Fragment>
+        <Pirates pirates={pirates} store ={store} />
+        <Weapons weapons={weapons} store ={store} />
+      </React.Fragment>
+    )
+  }
+}
+```
+
+Add remove item to react.
+
+List should take another prop - remove.
+
+```js
+function List (props) {
+  return (
+    <ul>
+      {props.items.map((item) => (
+        <li key={item.id}>
+          <span>
+            {item.name}
+          </span>
+          <button onClick={ () => props.remove(item)}>X</button>
+        </li>
+      ))}
+    </ul>
+  )
+}
+```
+
+Create removeItem inside Pirates and Weapons components.
+
+```js
+class Pirates extends React.Component {
+  addItem = (e) => {
+    e.preventDefault()
+    const name = this.input.value
+    this.input.value = ''
+    this.props.store.dispatch(addPirateAction({
+      id: generateId,
+      name,
+      complete: false
+    }))
+  }
+
+  removeItem = () => {
+
+  }
+
+  render() {
+    return (
+      <React.Fragment>
+        <h1>Pirate List</h1>
+        <input 
+          type='text'
+          placeholder='Add Pirate'
+          ref={ (input) => this.input = input }
+          />
+          <button onClick={this.addItem}>Add Pirate</button>
+          <List
+          items={this.props.pirates}
+          remove={this.removeItem}
+          />
+      </React.Fragment>
+    )
+  }
+}
+```
+
+```js
+removeItem = (pirate) => {
+  this.props.store.dispatch(removePirateAction(pirate.id))
+}
+```
+
+Add it to the Weapons component.
+
+```js
+class Weapons extends React.Component {
+
+  addItem = (e) => {
+    e.preventDefault()
+    const name = this.input.value
+    this.input.value = ''
+    this.props.store.dispatch(addWeaponAction({
+      id: generateId,
+      name
+    }))
+  }
+
+  removeItem = (weapon) => {
+    this.props.store.dispatch(removeWeaponAction(weapon.id))
+  }
+
+  render() {
+    return (
+      <React.Fragment>
+        <h1>Weapon List</h1>
+        <input 
+          type='text'
+          placeholder='Add Weapon'
+          ref={ (input) => this.input = input }
+          />
+          <button onClick={this.addItem}>Add Weapon</button>
+          <List
+          items={this.props.weapons}
+          remove={this.removeItem}
+          />
+      </React.Fragment>
+    )
+  }
+}
+```
+
+## Toggle
+
+This refers to the toggle functionality that marks a Pirate as spotted.
+
+The action in question is togglePirate. Add a method:
+
+```js
+toggleItem = (id) => {
+  this.props.store.dispatch(togglePirateAction(id))
+}
+```
+
+And pass it as a prop to the List component:
+
+```js
+class Pirates extends React.Component {
+  addItem = (e) => {
+    e.preventDefault()
+    const name = this.input.value
+    this.input.value = ''
+    this.props.store.dispatch(addPirateAction({
+      id: generateId,
+      name,
+      complete: false
+    }))
+  }
+
+  removeItem = (pirate) => {
+    this.props.store.dispatch(removePirateAction(pirate.id))
+  }
+
+  toggleItem = (id) => {
+    this.props.store.dispatch(togglePirateAction(id))
+  }
+
+  render() {
+    return (
+      <React.Fragment>
+        <h1>Pirate List</h1>
+        <input
+          type='text'
+          placeholder='Add Pirate'
+          ref={ (input) => this.input = input }
+          />
+          <button onClick={this.addItem}>Add Pirate</button>
+          <List
+          items={this.props.pirates}
+          remove={this.removeItem}
+          toggle={this.toggleItem}
+          />
+      </React.Fragment>
+    )
+  }
+}
+```
+
+List
+
+```js
+function List (props) {
+  return (
+    <ul>
+      {props.items.map((item) => (
+        <li key={item.id}>
+          <span onClick={ () => props.toggle(item.id)}>
+            {item.name}
+          </span>
+          <button onClick={ () => props.remove(item)}>X</button>
+        </li>
+      ))}
+    </ul>
+  )
+}
+```
+
+Run a test (we are not using toggle in Weapons) and add styling.
+
+```js
+function List (props) {
+  return (
+    <ul>
+      {props.items.map((item) => (
+        <li key={item.id}>
+          <span onClick={ () => props.toggle && props.toggle(item.id)}
+          style={ {textDecoration: item.complete ? 'line-through' : 'none'} }>
+            {item.name}
+          </span>
+          <button onClick={ () => props.remove(item)}>X</button>
+        </li>
+      ))}
+    </ul>
+  )
+}
+```
+
+## Handling Asynchronous Data
+
+Delete the vanilla JavaScript.
