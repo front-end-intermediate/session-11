@@ -1295,7 +1295,7 @@ The `createStore()` function creates state, returns state, creates listeners and
 
 Now we will built a front end for our state management system.
 
-Create a new `index.html` with a spot for our scripts.
+Create a new `index.html` in `test-one` with a link our scripts.
 
 ```html
 <html>
@@ -1312,9 +1312,7 @@ Create a new `index.html` with a spot for our scripts.
     <h1>Pirate Hunter</h1>
   </div>
 
-  <script type='text/javascript'>
-
-  </script>
+  <script type='text/javascript' src="js/scripts.js"></script>
 </body>
 </html>
 ```
