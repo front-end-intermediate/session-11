@@ -2,7 +2,8 @@
 
 * maintained outside the app
 * maintained in a 'store'
-* make it predictable using pure functions
+* make it as predictable as possible
+* uses "pure functions"
 
 ## Store
 
@@ -12,6 +13,8 @@ The store should have four parts:
 2. Get the state.
 3. Listen to changes on the state.
 4. Update the state
+
+Create in `test-one/js`:
 
 1 & 2 - create state and get state:
 
