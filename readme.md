@@ -14,9 +14,9 @@ The store should have four parts:
 3. Listen to changes on the state.
 4. Update the state
 
-Create in `test-one/js`:
+Create in `test-one/js/scripts.js`:
 
-1 & 2 - create state and get state:
+Store items 1 & 2 - create state and get state:
 
 ```js
 function createStore () {
@@ -31,7 +31,7 @@ function createStore () {
 }
 ```
 
-3 listen for changes on the state => subscribe
+Store item 3 - listen for changes on the state with `()=> subscribe`:
 
 ```js
 function createStore () {
@@ -53,8 +53,8 @@ function createStore () {
 // app code
 const store = createStore()
 store.subscribe( () => {
-	// user can pass a function to subscribe as many times as they want
-	// whenever the state changes we _must_ call any of the ƒ passed via subscribe
+  // user can pass a function to subscribe multiple times
+  // whenever the state changes we must call any of the ƒunction passed via subscribe
 })
 ```
 
@@ -69,7 +69,7 @@ function createStore () {
   const getState = () => state
 
   const subscribe = (listener) => {
-  	listeners.push(listener)  // <= when subscribe is called
+    listeners.push(listener)  // <= when subscribe is called
   }
 
   return {
@@ -81,11 +81,11 @@ function createStore () {
 // app code
 const store = createStore()
 store.subscribe( () => {
-	// we need to keep track of these ƒ
+  // we need to keep track of these ƒ
 })
 ```
 
-We also want to allow users to unsubscribe:
+We also want to allow users to unsubscribe. We will return a ƒunction with subscribe that, when called, removes a listener via filtering the listeners array:
 
 ```js
 function createStore () {
@@ -96,10 +96,10 @@ function createStore () {
   const getState = () => state
 
   const subscribe = (listener) => {
-  	listeners.push(listener)
-  	return () => {
-  		listeners = listeners.filter( (l) => l !== listener )
-  	}
+    listeners.push(listener)
+    return () => {
+      listeners = listeners.filter( (l) => l !== listener )
+    }
   }
 
   return {
@@ -111,13 +111,13 @@ function createStore () {
 // app code
 const store = createStore()
 const unsubscribe = store.subscribe( () => {
-	// 
+
 })
 ```
 
-Updating the state.
+## Updating State
 
-We need a way to describe state changes in our application. We'll use actions for this. 
+We need a way to describe state changes in our application. We'll use actions for this.
 
 An action is an object which describes what sort of transformation you want to make to your state.
 
@@ -168,6 +168,7 @@ function createStore () {
 1. depend only on the arguments passed into them - never access values outside of their own scope
 1. never produce any side effects - no AJAX or changes outside itself
 
+A pure function:
 
 ```js
 function add (x,y) {
@@ -195,7 +196,9 @@ friends.splice(0, 1) // ["Merrick"]
 
 ## Reducer function
 
-Needs to be predictable - a pure function. 
+Needs to be predictable - a pure function.
+
+For the following actions:
 
 ```js
 {
@@ -216,9 +219,13 @@ Needs to be predictable - a pure function.
   type: 'TOGGLE_PIRATE',
   id: 0,
 }
+```
 
- function pirates (state = [], action) {    //  ()state = [] - ES6 default
-   if (action.type === 'ADD_PIRATE') {      //  add pirate is our example
+Here's the 'pure' function that processes them:
+
+```js
+ function pirates (state = [], action) {    //  ()state = [] - an ES6 default parameter
+   if (action.type === 'ADD_PIRATE') {      //  ADD_PIRATE will be our example
      return state.concat([action.pirate])   //  .push() would be a mutation, .concat() returns the next state
    }
    return state
@@ -245,37 +252,49 @@ function createStore () {
 }
 ```
 
-## Dispatch
+### push() vs concat()
 
-Dispatch actions to change the state in a predicable manner. 
-
+`push()` is an impure ƒunction.
 
 ```js
-{
-  type: 'ADD_PIRATE',
-  pirate: {
-    id: 0,
-    name: 'Lizzie Terror',
-    complete: false,
+var arr1 = [‘a’, ‘b’, ‘c’];
+var arr2 = [‘d’, ‘e’, ‘f’];
+var arr3 = arr1.push(arr2);
+console.log(arr3); // 4
+console.log(arr1); // [“a”, “b”, “c”, [“d”, “e”, “f”]]
+```
+
+While `concat()` does not change the existing arrays, but instead returns a new array.
+
+```js
+var arr1 = [‘a’, ‘b’, ‘c’];
+var arr2 = [‘d’, ‘e’, ‘f’];
+var arr3 = arr1.concat(arr2);
+console.log(arr3); //[“a”, “b”, “c”, “d”, “e”, “f”]
+```
+
+## Dispatch
+
+`dispatch()` sends actions to the pirate function. That changes the state (in a predicable manner) and then `dispatch()` calls any listeners that have been passed in.
+
+```js
+const dispatch = (action) => {
+  // call the pirate ƒunction
+  state = pirates(state, action)
+  // loop over and run the listeners
+  listeners.forEach( (listener) => listener() )
+}
+```
+
+e.g.:
+
+```js
+function pirates (state = [], action) {
+  if (action.type === 'ADD_PIRATE') {
+    return state.concat([action.pirate])
   }
+  return state
 }
-
-{
-  type: 'REMOVE_PIRATE',
-  id: 0,
-}
-
-{
-  type: 'TOGGLE_PIRATE',
-  id: 0,
-}
-
- function pirates (state = [], action) {
-   if (action.type === 'ADD_PIRATE') {
-     return state.concat([action.pirate]) 
-   }
-   return state
- }
 
 function createStore () {
 
@@ -304,8 +323,11 @@ function createStore () {
     dispatch
   }
 }
+```
 
+Here is how we might call dispatch:
 
+```js
 const store = createStore()
 
 // dispatching an action
@@ -319,9 +341,11 @@ store.dispatch({
 })
 ```
 
-## Demo
+## Running the Code
 
-In the console:
+This can be run in the browser console but let's install Quokka in VSCode.
+
+Take two functions - `pirates()` and `createStore()`:
 
 ```js
 function pirates(state = [], action) {
@@ -332,10 +356,8 @@ function pirates(state = [], action) {
  }
 
 function createStore () {
-
   let state
   let listeners = []
-
   const getState = () => state
 
   const subscribe = (listener) => {
@@ -359,6 +381,8 @@ function createStore () {
   }
 }
 ```
+
+And run the following commands:
 
 ```js
 > const store = createStore()
@@ -395,9 +419,9 @@ function createStore () {
   // no return
 ```
 
-Structural change.
+## Structural Change
 
-Pass in the pirates function (the "reducer function") when we call createStore. This will allow the user to pass in their own reducer function.
+We will pass in the pirates function (aka the "reducer function") when we call `createStore()`. This will enable users (here, developers) to pass in their own reducer function.
 
 e.g.:
 
@@ -406,7 +430,7 @@ e.g.:
 
 function pirates (state = [], action) {
  if (action.type === 'ADD_PIRATE') {
-   return state.concat([action.pirate]) 
+   return state.concat([action.pirate])
  }
  return state
 }
@@ -428,9 +452,7 @@ function createStore ( reducer ) {  // passed in reducer ƒ
   }
 
   const dispatch = (action) => {
-    // call the pirate ƒ
     state = reducer(state, action)
-    // loop over and run the listeners
     listeners.forEach( (listener) => listener() )
   }
 
@@ -444,24 +466,35 @@ function createStore ( reducer ) {  // passed in reducer ƒ
 const store = createStore(pirates)  // pass in the reducer ƒ
 ```
 
-## Adding Functionality
+## Additional Actions
 
-The reducer only handles one action `action.type === 'ADD_PIRATE')`. 
+The reducer currently only handles one action `action.type === 'ADD_PIRATE')`.
 
 Add the other two actions using best practices.
 
-* REMOVE_PIRATE - filter out the pirate that has a specific id 
-* TOGGLE_PIRATE - modify an item inside the object, don't modify directly
-
-`pirate.id !== action.id ? pirate` - if the id isn't a match don't process it, otherwise:
+* REMOVE_PIRATE - filter out the pirate with a specific id:
 
 ```js
-pirate.id !== action.id ? pirate : {
-    name: pirate.name,
-    id: pirate.id,
-    complete: !pirate.complete
-    })  
+return state.filter((pirate) => pirate.id !== action.id)
 ```
+
+* TOGGLE_PIRATE - here we are modifying an item inside the object, we should be careful not to modify it directly.
+
+```js
+state.map((pirate) => pirate.id !== action.id ? pirate : {
+  name: pirate.name,
+  id: pirate.id,
+  complete: !pirate.complete
+}
+```
+
+`pirate.id !== action.id ? pirate` - means, if the id isn't a match don't process it but do add it to the array, otherwise we set the complete value to its opposite.  Remember `.map()` always returns an array of the same length as what's passed into it.
+
+We are using a [ternary](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Conditional_Operator) operator here. You should become familiar with them as they are extremely common in React - mostly due to issues writing `if...then` statements in JSX.
+
+Let's see it in context.
+
+Here's the actions again for reference:
 
 ```js
 {
@@ -482,25 +515,32 @@ pirate.id !== action.id ? pirate : {
   type: 'TOGGLE_PIRATE',
   id: 0,
 }
+```
 
+And here's the new pirates reducer:
+
+```js
 function pirates (state = [], action) {
  if (action.type === 'ADD_PIRATE') {
-   return state.concat([action.pirate]) 
+   return state.concat([action.pirate])
+   // we already covered concat
  } else if (action.type === 'REMOVE_PIRATE'){
    return state.filter((pirate) => pirate.id !== action.id)
+   // returns an array with all pirates except the one with the id
  } else if (action.type === 'TOGGLE_PIRATE'){
    state.map((pirate) => pirate.id !== action.id ? pirate : {
     name: pirate.name,
     id: pirate.id,
     complete: !pirate.complete
-    })  
+    })
+    // maps the array, stopping only on the item where the id matches to toggle complete
  } else {
   return state
  }
 }
 ```
 
-If we start adding/.changing properties this could fail. Use `Object.assign()`:
+The toggle action is fragile. If we start adding/changing properties it could fail. Use `Object.assign()` instead:
 
 ```js
 function pirates (state = [], action) {
@@ -517,6 +557,10 @@ function pirates (state = [], action) {
   }
  }
 ```
+
+The `Object.assign()` method is used to copy the values of all enumerable own properties from one or more source objects to a target object. It will return the target object.
+
+## Testing
 
 In the console:
 
@@ -535,8 +579,7 @@ function pirates (state = [], action) {
   }
  }
 
-function createStore ( reducer ) { 
-
+function createStore ( reducer ) {
   let state
   let listeners = []
 
@@ -550,9 +593,7 @@ function createStore ( reducer ) {
   }
 
   const dispatch = (action) => {
-    // call the pirate ƒ
     state = reducer(state, action)
-    // loop over and run the listeners
     listeners.forEach( (listener) => listener() )
   }
 
@@ -577,7 +618,7 @@ function createStore ( reducer ) {
     complete: false,
   }
   })
-> store.dispatch({
+  store.dispatch({
   type: 'ADD_PIRATE',
     pirate: {
       id: 1,
@@ -585,7 +626,7 @@ function createStore ( reducer ) {
       complete: true,
     }
   })
-> store.dispatch({
+  store.dispatch({
   type: 'ADD_PIRATE',
     pirate: {
       id: 2,
@@ -603,7 +644,9 @@ function createStore ( reducer ) {
   })
 ```
 
-It is something of a standard to use a switch statement instead of `else ... if`s.
+It is something of a standard in the React community to use a [switch statement](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/switch) instead of `else ... if`s. (Run the sample in Quokka.)
+
+Refactor the pirates reducer:
 
 ```js
 function pirates (state = [], action) {
@@ -624,7 +667,7 @@ function pirates (state = [], action) {
 
 ## Adding Reducers
 
-Assume we have an additional set of actions:
+Assume we have an additional set of actions for a new state item which we'll call weapons:
 
 ```js
 {
@@ -657,9 +700,13 @@ function weapons (state = [], action) {
 }
 ```
 
-When we create a store we pass a reducer. Now we have multiple reducers.
+When we create a store we pass a reducer:
 
-The goal of a reducer is to get us to the next state. Instead of state being an array, we want state to be an object with a shape like this:
+`const store = createStore(pirates)`
+
+Now we have multiple reducers.
+
+The goal of a reducer is to get us to the next state. Because we have this new requirement we cannot use an an array. Instead of state being an array, we want state to be an object with a shape like this:
 
 ```js
 {
@@ -668,7 +715,7 @@ The goal of a reducer is to get us to the next state. Instead of state being an 
 }
 ```
 
-We will create a new function that returns this shape:
+Create a new function that returns this shape:
 
 ```js
 function app (state, action){
@@ -690,7 +737,7 @@ function app (state, action){
 }
 ```
 
-The first time the app component is inkoke state will be empty. We will use ES6 [default params](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Default_parameters) again:
+The first time the app component is invoked, state will be empty. We will use ES6 [default params](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Default_parameters) again:
 
 ```js
 function app (state = {}, action){
@@ -764,8 +811,9 @@ function createStore ( reducer ) {
     dispatch
   }
 }
-
 ```
+
+Run the following commands:
 
 ```js
 const store = createStore(app)
@@ -773,7 +821,11 @@ const store = createStore(app)
 store.subscribe(() => {
   console.log('The new state is: ', store.getState())
 })
+```
 
+Now add all the dispatch calls below:
+
+```js
 store.dispatch({
   type: 'ADD_PIRATE',
   pirate: {
@@ -835,76 +887,9 @@ store.dispatch({
 
 ## Constants
 
-Our library code is similar to what you might download in via NPM. The app code is the code that you, as a user of the library, might write.
+Whenever we use the `ADD_PIRATE` action we are passing a string. Rather than using strings let's declare them as variables, e.g.:
 
 ```js
-// APP CODE
-function app (state = {}, action){
-  return {
-    pirates: pirates(state.pirates, action),
-    weapons: weapons(state.weapons, action)
-  }
-}
-
-function createStore ( reducer ) {
-  
-  let state
-  let listeners = []
-  
-  const getState = () => state
-  
-  const subscribe = (listener) => {
-    listeners.push(listener)
-    return () => {
-      listeners = listeners.filter((l) => l !== listener)
-    }
-  }
-  
-  const dispatch = (action) => {
-    state = reducer(state, action)
-    listeners.forEach( (listener) => listener() )
-  }
-  
-  return {
-    getState,
-    subscribe,
-    dispatch
-  }
-}
-
-// APP CODE
-function pirates (state = [], action) {
-  switch(action.type) {
-    case 'ADD_PIRATE' :
-    return state.concat([action.pirate])
-    case 'REMOVE_PIRATE' :
-    return state.filter((pirate) => pirate.id !== action.id)
-    case 'TOGGLE_PIRATE' :
-    return state.map((pirate) => pirate.id !== action.id ? pirate :
-    Object.assign({}, pirate, {complete: !pirate.complete})
-    )
-    default :
-    return state
-  }
-}
-
-function weapons (state = [], action) {
-  switch(action.type) {
-    case 'ADD_WEAPON' :
-    return state.concat([action.weapon])
-    case 'REMOVE_WEAPON' :
-    return state.filter((weapon) => weapon.id !== action.id)
-    default :
-    return state
-  }
-}
-```
-
-Whenever we use the ADD_PIRATE action type we are passing a string. Rather than using strings let's declare variables, e.g.:
-
-```js
-// APP CODE
-
 const ADD_PIRATE = 'ADD_PIRATE' // variable
 
 function pirates (state = [], action) {
@@ -923,9 +908,9 @@ function pirates (state = [], action) {
 }
 ```
 
-```js
-// APP CODE
+Here's the full implementation:
 
+```js
 const ADD_PIRATE = 'ADD_PIRATE'
 const REMOVE_PIRATE = 'REMOVE_PIRATE'
 const TOGGLE_PIRATE = 'TOGGLE_PIRATE'
@@ -934,7 +919,7 @@ const REMOVE_WEAPON = 'REMOVE_WEAPON'
 
 function pirates (state = [], action) {
   switch(action.type) {
-    case ADD_PIRATE : // use the variable
+    case ADD_PIRATE : // we now use the variable
     return state.concat([action.pirate])
     case REMOVE_PIRATE :
     return state.filter((pirate) => pirate.id !== action.id)
@@ -959,7 +944,9 @@ function weapons (state = [], action) {
 }
 ```
 
-Whenever we dispatch an action we are hard coding the object. Create a function that will return the actual action.
+Whenever we dispatch an action we are hard coding the object.
+
+We will create functions that will return the actual action.
 
 ```js
 function addPirateAction(pirate){
@@ -970,6 +957,8 @@ function addPirateAction(pirate){
 }
 ```
 
+They will be called like this:
+
 ```js
 store.dispatch(addPirateAction({
   id: 0,
@@ -978,7 +967,7 @@ store.dispatch(addPirateAction({
 }))
 ```
 
-Actions for all the items.
+Here are actions for all the items.
 
 ```js
 function addPirateAction(pirate){
@@ -1012,6 +1001,109 @@ function removeWeaponAction(id){
   }
 }
 ```
+
+## Testing
+
+Use this as the test script:
+
+```js
+function addPirateAction(pirate){
+  return {
+    type: ADD_PIRATE,
+    pirate
+  }
+}
+function removePirateAction(id){
+  return {
+    type: REMOVE_PIRATE,
+    id
+  }
+}
+function togglePirateAction(id){
+  return {
+    type: TOGGLE_PIRATE,
+    id
+  }
+}
+function addWeaponAction(weapon){
+  return {
+    type: ADD_WEAPON,
+    weapon
+  }
+}
+function removeWeaponAction(id){
+  return {
+    type: REMOVE_WEAPON,
+    id
+  }
+}
+const ADD_PIRATE = 'ADD_PIRATE'
+const REMOVE_PIRATE = 'REMOVE_PIRATE'
+const TOGGLE_PIRATE = 'TOGGLE_PIRATE'
+const ADD_WEAPON = 'ADD_WEAPON'
+const REMOVE_WEAPON = 'REMOVE_WEAPON'
+
+function pirates (state = [], action) {
+  switch(action.type) {
+    case ADD_PIRATE : // we now use the variable
+    return state.concat([action.pirate])
+    case REMOVE_PIRATE :
+    return state.filter((pirate) => pirate.id !== action.id)
+    case TOGGLE_PIRATE :
+    return state.map((pirate) => pirate.id !== action.id ? pirate :
+    Object.assign({}, pirate, {complete: !pirate.complete})
+    )
+    default :
+    return state
+  }
+}
+
+function weapons (state = [], action) {
+  switch(action.type) {
+    case ADD_WEAPON :
+    return state.concat([action.weapon])
+    case REMOVE_WEAPON :
+    return state.filter((weapon) => weapon.id !== action.id)
+    default :
+    return state
+  }
+}
+
+function app (state = {}, action){
+  return {
+    pirates: pirates(state.pirates, action),
+    weapons: weapons(state.weapons, action)
+  }
+}
+
+function createStore ( reducer ) {
+  
+  let state
+  let listeners = []
+  
+  const getState = () => state
+  
+  const subscribe = (listener) => {
+    listeners.push(listener)
+    return () => {
+      listeners = listeners.filter((l) => l !== listener)
+    }
+  }
+  
+  const dispatch = (action) => {
+    state = reducer(state, action)
+    listeners.forEach( (listener) => listener() )
+  }
+  
+  return {
+    getState,
+    subscribe,
+    dispatch
+  }
+}
+```
+
+Now, we should be able to run the following commands. Note that the dispatches are now calling the functions:
 
 ```js
 const store = createStore(app)
@@ -1058,8 +1150,6 @@ store.dispatch(removeWeaponAction(0))
 Here is the entire Quokka script:
 
 ```js
-// APP CODE
-
 const ADD_PIRATE = 'ADD_PIRATE'
 const REMOVE_PIRATE = 'REMOVE_PIRATE'
 const TOGGLE_PIRATE = 'TOGGLE_PIRATE'
@@ -1201,7 +1291,9 @@ We have abstracted our actions into their own action creates. Now whenever you w
 
 ## App Scaffolding
 
-The createStore() function creates state, returns state, creates listeners and updates state in the most predicatable manner possible.
+The `createStore()` function creates state, returns state, creates listeners and updates state in the most predicatable manner possible.
+
+Now we will built a front end for our state management system.
 
 Create a new `index.html` with a spot for our scripts.
 
