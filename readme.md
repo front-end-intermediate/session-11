@@ -1702,3 +1702,24 @@ Here are some popular packages in the Redux ecosystem that are implemented via m
 * [redux-cookies-middleware](https://github.com/grofers/redux-cookies-middleware/) - a Redux middleware which syncs a subset of your Redux store state with cookies.
 * [redux-test-recorder](https://github.com/conorhastings/redux-test-recorder) - Redux test recorder is a redux middleware + included component for automagically generating tests for your reducers based on the actions in your app
 
+## Logging Middleware
+
+We will log the action and the state to the console using middleware.
+
+```js
+const logger = (store) => (next) => (action) => {
+  console.group(action.type)
+  console.log('The action: ', action )
+  const result = next(action)
+  console.log('The new state: ', store.getState())
+  console.groupEnd()
+  return result
+}
+```
+
+```js
+const store = Redux.createStore(Redux.combineReducers({
+  pirates,
+  weapons
+}), Redux.applyMiddleware(checker, logger))
+```

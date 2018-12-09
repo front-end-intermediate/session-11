@@ -59,6 +59,15 @@ const checker = (store) => (next) => (action) => {
   return next(action)
 }
 
+const logger = (store) => (next) => (action) => {
+  console.group(action.type)
+  console.log('The action: ', action )
+  const result = next(action)
+  console.log('The new state: ', store.getState())
+  console.groupEnd()
+  return result
+}
+
 // REDUCERS
 function pirates (state = [], action) {
   switch(action.type) {
@@ -89,7 +98,7 @@ function weapons (state = [], action) {
 const store = Redux.createStore(Redux.combineReducers({
   pirates,
   weapons
-}),Redux.applyMiddleware(checker))
+}),Redux.applyMiddleware(checker, logger))
 
 store.subscribe(() => {
   const { weapons, pirates } = store.getState()
