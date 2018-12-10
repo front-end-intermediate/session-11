@@ -9,9 +9,7 @@ document.getElementById('pirateBtn')
 document.getElementById('weaponBtn')
 .addEventListener('click', addWeapon)
 
-function generateId(){
-  return Date.now()
-}
+
 
 store.subscribe(() => {
   const { weapons, pirates } = store.getState()

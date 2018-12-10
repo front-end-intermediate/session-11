@@ -19,7 +19,7 @@ class Pirates extends React.Component {
     const name = this.input.value
     this.input.value = ''
     this.props.store.dispatch(addPirateAction({
-      id: generateId,
+      id: generateId(),
       name,
       complete: false
     }))
@@ -60,7 +60,7 @@ class Weapons extends React.Component {
     const name = this.input.value
     this.input.value = ''
     this.props.store.dispatch(addWeaponAction({
-      id: generateId,
+      id: generateId(),
       name
     }))
   }

@@ -4,6 +4,10 @@ const TOGGLE_PIRATE = 'TOGGLE_PIRATE'
 const ADD_WEAPON = 'ADD_WEAPON'
 const REMOVE_WEAPON = 'REMOVE_WEAPON'
 
+function generateId(){
+  return Date.now()
+}
+
 function addPirateAction(pirate){
   return {
     type: ADD_PIRATE,
