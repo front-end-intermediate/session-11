@@ -1,5 +1,15 @@
 # XI State
 
+## Homework
+
+Implement the React portion of the exercise using Create React App.
+
+## Reading
+
+[Leveling Up with React Redux](https://css-tricks.com/learning-react-redux/)
+
+## State
+
 * maintained outside the app
 * maintained in a 'store'
 * make it as predictable as possible
