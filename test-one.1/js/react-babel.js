@@ -1,13 +1,19 @@
-function List (props) {
+function List(props) {
   return (
     <ul>
-    <li>list</li>
+      {props.items.map((item) => (
+        <li key={item.id}>
+          <span onClick={ () => props.toggle && props.toggle(item.id)}
+          style={ {textDecoration: item.complete ? 'line-through' : 'none'} }>
+            {item.name}
+          </span>
+          <button onClick={ () => props.remove(item)}>✖︎</button>
+        </li>
+      ))}
     </ul>
   )
 }
-
 class Pirates extends React.Component {
-
   addItem = (e) => {
     e.preventDefault()
     const name = this.input.value
@@ -17,6 +23,14 @@ class Pirates extends React.Component {
       name,
       complete: false
     }))
+  }
+
+  removeItem = (pirate) => {
+    this.props.store.dispatch(removePirateAction(pirate.id))
+  }
+
+  toggleItem = (id) => {
+    this.props.store.dispatch(togglePirateAction(id))
   }
 
   render() {
@@ -29,7 +43,11 @@ class Pirates extends React.Component {
           ref={ (input) => this.input = input }
           />
           <button onClick={this.addItem}>Add Pirate</button>
-        <List />
+          <List
+          items={this.props.pirates}
+          remove={this.removeItem}
+          toggle={this.toggleItem}
+          />
       </React.Fragment>
     )
   }
@@ -47,6 +65,10 @@ class Weapons extends React.Component {
     }))
   }
 
+  removeItem = (pirate) => {
+    this.props.store.dispatch(removePirateAction(pirate.id))
+  }
+
   render() {
     return (
       <React.Fragment>
@@ -57,13 +79,22 @@ class Weapons extends React.Component {
           ref={ (input) => this.input = input }
           />
           <button onClick={this.addItem}>Add Weapon</button>
-        <List />
+          <List
+          items={this.props.weapons}
+          remove={this.removeItem}
+          />
       </React.Fragment>
     )
   }
 }
-
+// make the store available to Pirates
 class App extends React.Component {
+
+  componentDidMount () {
+    const { store } = this.props
+    store.subscribe( () => this.forceUpdate())
+  }
+
   render(){
     const { store } = this.props
     const { pirates, weapons } = store.getState()
@@ -75,8 +106,8 @@ class App extends React.Component {
     )
   }
 }
-
+// make the store available to App
 ReactDOM.render(
-  <App />,
+  <App store={store} />,
   document.getElementById('app')
 )

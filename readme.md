@@ -2106,6 +2106,8 @@ const store = Redux.createStore(Redux.combineReducers({
 <script src='https://unpkg.com/babel-standalone@6.15.0/babel.min.js'></script>
 ```
 
+Keeping the existing vanilla JS app, add the following to the html. Note the new script's type `text/babel` (so we can use JSX):
+
 ```html
 <hr />
 <div id="app"></div>
@@ -2113,7 +2115,7 @@ const store = Redux.createStore(Redux.combineReducers({
 <script type="text/babel" src="js/react-babel.js"></script>
 ```
 
-Implement the main component.
+Create the new js file and implement the main app component.
 
 ```js
 class App extends React.Component {
@@ -2166,7 +2168,7 @@ class Weapons extends React.Component {
 }
 ```
 
-And render them via the App:
+And render them via the main App:
 
 ```js
 class App extends React.Component {
@@ -2199,9 +2201,11 @@ function addPirate(){
 }
 ```
 
-Implement this is the Pirates component using React.
+We grabbed the value from the input and then called our store and dispatched `addPirateAction()` with the id, name and a default value for complete.
 
-First the return:
+We will now implement this is the Pirates component using React.
+
+Add a header, input field (using a ref) and a button:
 
 ```js
 class Pirates extends React.Component {
@@ -2249,9 +2253,12 @@ class Pirates extends React.Component {
 }
 ```
 
+We used `this.props.store` above.
+
 Pass the store to the Pirate component via props from App
 
 ```js
+// make the store available to Pirates
 class App extends React.Component {
   render(){
     return(
@@ -2262,6 +2269,11 @@ class App extends React.Component {
     )
   }
 }
+// make the store available to App
+ReactDOM.render(
+  <App store={store} />,
+  document.getElementById('app')
+)
 ```
 
 Now that the Pirates component has access to store we can complete the addItem function:
@@ -2279,6 +2291,12 @@ addItem = (e) => {
 }
 ```
 
+You should now be able to add a pirate to state. 
+
+Note that it shows up in the vanilla js (VJS) app. VJS is using the same store as our react app. We haven't implemented list in our React app yet. In effect, we have two apps which are sharing the same state.
+
+## Dispatching Weapons
+
 Pass store as props to the weapons component.
 
 ```js
@@ -2294,7 +2312,7 @@ class App extends React.Component {
 }
 ```
 
-Edit Weapons to add an input field and button as well:
+Edit Weapons to add a header, an input field and button as well:
 
 ```js
 class Weapons extends React.Component {
@@ -2315,7 +2333,7 @@ class Weapons extends React.Component {
 }
 ```
 
-Add the same addItem function:
+Add the same addItem function to Weapons:
 
 ```js
 class Weapons extends React.Component {
@@ -2347,9 +2365,13 @@ class Weapons extends React.Component {
 }
 ```
 
+You should now be able to add a weapon to state.
+
 Now, in order to get the fields to work we will render the Lists.
 
-Grab the Pirates and the Weapons and pass them to the components:
+## Render the Lists
+
+Grab the Pirates and the Weapons state and pass them to thier respective components:
 
 ```js
 class App extends React.Component {
@@ -2366,27 +2388,27 @@ class App extends React.Component {
 }
 ```
 
-Pirates component
+Now the Pirates and Weapons component receive their respective states.
+
+Pirates component:
 
 ```js
-<List
-items={this.props.pirates}/>
+<List items={this.props.pirates}/>
 ```
 
 Weapons component"
 
 ```js
-<List
-items={this.props.weapons}/>
+<List items={this.props.weapons}/>
 ```
 
-List
+Inside the List component we want to take in the props and map through them to show them in the view. 
 
 ```js
 function List (props) {
   return (
     <ul>
-      {props.item.map((item) => (
+      {props.items.map((item) => (
         <li key={item.id}>
           <span>
             {item.name}
@@ -2398,9 +2420,25 @@ function List (props) {
 }
 ```
 
-App
+Now if we add a new pirate we are still not seeing the view yet. The list component isn't receiving any items.
 
-We want to cause a re-render by using setState. But we do not have any state inside the component. We will use forceUpdate:
+This is because our App component isn't listening for changes to state. In our VJS app we used `store.subscribe()` to listen for updates to state:
+
+```js
+store.subscribe(() => {
+  const { weapons, pirates } = store.getState()
+
+  document.getElementById('pirates').innerHTML = ''
+  document.getElementById('weapons').innerHTML = ''
+
+  pirates.forEach(addPirateToDom)
+  weapons.forEach(addWeaponToDom)
+})
+```
+
+We want to cause a re-render which would normally be done by using `setState()`. But we do not have any state inside the App component. 
+
+We will use a component lifecycle method and `forceUpdate()`:
 
 ```js
 class App extends React.Component {
@@ -2423,9 +2461,13 @@ class App extends React.Component {
 }
 ```
 
+`forceUpdate()` triggers React's render() method. It is a bit of a hack at the moment but I cannot see adding state to the app component at this time.
+
+## Remove Items
+
 Add remove item to react.
 
-List should take another prop - remove.
+The List component should take another prop - remove: `<button onClick={ () => props.remove(item)}>✖︎</button>`.
 
 ```js
 function List (props) {
@@ -2436,7 +2478,7 @@ function List (props) {
           <span>
             {item.name}
           </span>
-          <button onClick={ () => props.remove(item)}>X</button>
+          <button onClick={ () => props.remove(item)}>✖︎</button>
         </li>
       ))}
     </ul>
@@ -2444,7 +2486,22 @@ function List (props) {
 }
 ```
 
-Create removeItem inside Pirates and Weapons components.
+We pass in the item that should be removed. Now we need to create `removeItem()` inside the Pirates and Weapons components as well as pass it to the List component:
+
+```js
+removeItem = (weapon) => {
+  this.props.store.dispatch(removePirateAction(weapon.id))
+}
+```
+
+```js
+<List
+items={this.props.pirates}
+remove={this.removeItem}
+/>
+```
+
+As follows:
 
 ```js
 class Pirates extends React.Component {
@@ -2459,8 +2516,8 @@ class Pirates extends React.Component {
     }))
   }
 
-  removeItem = () => {
-
+  removeItem = (pirate) => {
+    this.props.store.dispatch(removePirateAction(pirate.id))
   }
 
   render() {
@@ -2483,13 +2540,7 @@ class Pirates extends React.Component {
 }
 ```
 
-```js
-removeItem = (pirate) => {
-  this.props.store.dispatch(removePirateAction(pirate.id))
-}
-```
-
-Add it to the Weapons component.
+In the Weapons component.
 
 ```js
 class Weapons extends React.Component {
@@ -2530,9 +2581,9 @@ class Weapons extends React.Component {
 
 ## Toggle
 
-This refers to the toggle functionality that marks a Pirate as spotted.
+Add the toggle functionality that marks a Pirate as spotted.
 
-The action in question is togglePirate. Add a method:
+The action in question is togglePirate. Add a method to the Pirate component:
 
 ```js
 toggleItem = (id) => {
@@ -2584,7 +2635,7 @@ class Pirates extends React.Component {
 }
 ```
 
-List
+And call it in the List component:
 
 ```js
 function List (props) {
@@ -2603,7 +2654,7 @@ function List (props) {
 }
 ```
 
-Run a test (we are not using toggle in Weapons) and add styling.
+And add styling:
 
 ```js
 function List (props) {
@@ -2620,6 +2671,14 @@ function List (props) {
       ))}
     </ul>
   )
+}
+```
+
+## Notes
+
+```js
+function generateId () {
+  return Math.random().toString(36).substring(2) + (new Date()).getTime().toString(36);
 }
 ```
 
