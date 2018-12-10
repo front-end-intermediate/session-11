@@ -1301,7 +1301,7 @@ store.dispatch(removeWeaponAction(0))
 
 We have abstracted our actions into their own action creates. Now whenever you want to access and action you call it and pass in the data for that specific action.
 
-## App Scaffolding
+## App UI - Vanilla JavaScript
 
 The `createStore()` function creates state, returns state, creates listeners and updates state in the most predicatable manner possible.
 
@@ -1469,7 +1469,9 @@ function createStore ( reducer ) {
 }
 ```
 
-Open the file in a browser and examine the console.
+Open the file in a browser and examine the console. You should see the same information as we saw in previously.
+
+Delete the contents of the script tag in `index.html`.
 
 Add to the DOM (after the header):
 
@@ -1489,7 +1491,11 @@ Add to the DOM (after the header):
 </div>
 ```
 
-In the JS block in `index.html`:
+Create a new JS file - `dom.js` and link it to index.html. 
+
+Most of our work now will be done in this file.
+
+In `dom.js`:
 
 ```js
 const store = createStore(app)
@@ -1544,7 +1550,7 @@ document.getElementById('weaponBtn')
 .addEventListener('click', addWeapon)
 ```
 
-The input fields should now be connected to the state.
+And test. The input fields should now be connected to the state.
 
 <!-- Comment out the current dispatches: -->
 
@@ -1586,7 +1592,7 @@ The input fields should now be connected to the state.
 
 ## Subscribing to Updates
 
-We already have this script:
+We already have this script in dom.js:
 
 ```js
 store.subscribe(() => {
@@ -1594,7 +1600,7 @@ store.subscribe(() => {
 })
 ```
 
-<!-- Let's separate pirates and weapons. -->
+Let's subscribe separately to pirates and weapons.
 
 ```js
 store.subscribe(() => {
@@ -1606,11 +1612,11 @@ store.subscribe(() => {
 
 And test.
 
-## Add Elements to the DOM
+## Adding Elements to the DOM
 
 Loop over the items and throw them into the DOM.
 
-Do weapons first (its easier):
+First we will run `forEach()` agains two new ƒunctions:
 
 ```js
 store.subscribe(() => {
@@ -1618,7 +1624,13 @@ store.subscribe(() => {
   pirates.forEach(addPirateToDom)
   weapons.forEach(addWeaponToDom)
 })
+```
 
+Then create the add to dom functions. They very are similar.
+
+`addWeaponToDom`:
+
+```js
 function addWeaponToDom(weapon){
   const node = document.createElement('li')
   const text = document.createTextNode(weapon.name)
@@ -1627,7 +1639,7 @@ function addWeaponToDom(weapon){
 }
 ```
 
-Do the same for pirates.
+`addPirateToDom`:
 
 ```js
 function addPirateToDom(pirate){
@@ -1638,9 +1650,9 @@ function addPirateToDom(pirate){
 }
 ```
 
-Try adding a second pirate. Eveytime we add an item we are appending the previous items.
+Try adding a pirates. Eveytime we add an item we are appending the previous items.
 
-We need to clear the list.
+We'll clear the list items by emptying them prior to calling `forEach()`.
 
 ```js
 store.subscribe(() => {
@@ -1656,9 +1668,9 @@ store.subscribe(() => {
 
 ## Toggle Pirate
 
-Recall that only pirates have the complete property. In our example it is intended to be used to toggle pirates as seen.
+Recall that only pirates have the 'complete' property. In our example it is intended to be used to toggle pirates as seen.
 
-Let add the toggle functionality to `addPirateToDom()` with a ternary operator:
+We'll add the toggle functionality to `addPirateToDom()` with a [ternary](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Conditional_Operator) operator:
 
 ```js
 function addPirateToDom(pirate){
@@ -1682,7 +1694,7 @@ Create a new function that returns a button.
 ```js
 function createRemoveButton(onClick){
   const removeBtn = document.createElement('button')
-  removeBtn.innerHTML = 'x'
+  removeBtn.innerHTML = '✖︎'
   removeBtn.addEventListener('click', onClick)
 
   return removeBtn
@@ -1732,97 +1744,95 @@ function addWeaponToDom(weapon){
 
 Here is the complete DOM scripting portion of this exercise:
 
-```html
-<script>
-  const store = createStore(app)
+```js
+const store = createStore(app)
 
-  document.getElementById('pirateBtn')
-  .addEventListener('click', addPirate)
-  
-  document.getElementById('weaponBtn')
-  .addEventListener('click', addWeapon)
-  
-  function generateId(){
-    return Date.now()
-  }
-  
-  store.subscribe(() => {
-    const { weapons, pirates } = store.getState()
+document.getElementById('pirateBtn')
+.addEventListener('click', addPirate)
 
-    document.getElementById('pirates').innerHTML = ''
-    document.getElementById('weapons').innerHTML = ''
+document.getElementById('weaponBtn')
+.addEventListener('click', addWeapon)
 
-    pirates.forEach(addPirateToDom)
-    weapons.forEach(addWeaponToDom)
+function generateId(){
+  return Date.now()
+}
+
+store.subscribe(() => {
+  const { weapons, pirates } = store.getState()
+
+  document.getElementById('pirates').innerHTML = ''
+  document.getElementById('weapons').innerHTML = ''
+
+  pirates.forEach(addPirateToDom)
+  weapons.forEach(addWeaponToDom)
+})
+
+function addPirateToDom(pirate){
+  const node = document.createElement('li')
+  const text = document.createTextNode(pirate.name)
+
+  const removeBtn = createRemoveButton(() => {
+    store.dispatch(removePirateAction(pirate.id))
   })
-  
-  function addPirateToDom(pirate){
-    const node = document.createElement('li')
-    const text = document.createTextNode(pirate.name)
 
-    const removeBtn = createRemoveButton(() => {
-      store.dispatch(removePirateAction(pirate.id))
-    })
+  node.appendChild(text)
+  node.appendChild(removeBtn)
 
-    node.appendChild(text)
-    node.appendChild(removeBtn)
+  node.style.textDecoration = pirate.complete ? 'line-through' : 'none'
+  node.addEventListener('click', () => {
+    store.dispatch(togglePirateAction(pirate.id))
+  })
 
-    node.style.textDecoration = pirate.complete ? 'line-through' : 'none'
-    node.addEventListener('click', () => {
-      store.dispatch(togglePirateAction(pirate.id))
-    })
+  document.getElementById('pirates').appendChild(node)
+}
 
-    document.getElementById('pirates').appendChild(node)
-  }
-  
-  function addWeaponToDom(weapon){
-    const node = document.createElement('li')
-    const text = document.createTextNode(weapon.name)
+function addWeaponToDom(weapon){
+  const node = document.createElement('li')
+  const text = document.createTextNode(weapon.name)
 
-    const removeBtn = createRemoveButton( () => {
-      store.dispatch(removeWeaponAction(weapon.id))
-    })
+  const removeBtn = createRemoveButton( () => {
+    store.dispatch(removeWeaponAction(weapon.id))
+  })
 
-    node.appendChild(text)
-    node.append(removeBtn)
+  node.appendChild(text)
+  node.append(removeBtn)
 
-    document.getElementById('weapons').appendChild(node)
-  }
-  
-  function addPirate(){
-    const input = document.getElementById('pirate')
-    const name = input.value
-    input.value = ''
+  document.getElementById('weapons').appendChild(node)
+}
 
-    store.dispatch(addPirateAction({
-      id: generateId(),
-      name,
-      complete: false,
-    }))
-  }
-  
-  function addWeapon(){
-    const input = document.getElementById('weapon')
-    const name = input.value
-    input.value = ''
+function addPirate(){
+  const input = document.getElementById('pirate')
+  const name = input.value
+  input.value = ''
 
-    store.dispatch(addWeaponAction({
-      id: generateId(),
-      name
-    }))
-  }
-  
-  function createRemoveButton(onClick){
-    const removeBtn = document.createElement('button')
-    removeBtn.innerHTML = 'x'
-    removeBtn.addEventListener('click', onClick)
+  store.dispatch(addPirateAction({
+    id: generateId(),
+    name,
+    complete: false,
+  }))
+}
 
-    return removeBtn
-  }
-</script>
+function addWeapon(){
+  const input = document.getElementById('weapon')
+  const name = input.value
+  input.value = ''
+
+  store.dispatch(addWeaponAction({
+    id: generateId(),
+    name
+  }))
+}
+
+function createRemoveButton(onClick){
+  const removeBtn = document.createElement('button')
+  removeBtn.innerHTML = 'x'
+  removeBtn.addEventListener('click', onClick)
+
+  return removeBtn
+}
 ```
 
-Congratulations! You have just created [Redux](https://redux.js.org/).
+Congratulations! You have just created [Redux](https://redux.js.org/) and implemented a vanilla JS example of usage.
 
 Let's test that statement.
 
@@ -1832,7 +1842,7 @@ Add this to the head of the html file.
 <script src='https://cdnjs.cloudflare.com/ajax/libs/redux/3.7.2/redux.min.js'></script>
 ```
 
-Delete:
+Delete the create store function from `scripts.js`:
 
 ```js
 function createStore ( reducer ) {
@@ -1862,7 +1872,7 @@ function createStore ( reducer ) {
 }
 ```
 
-Now, instead of creating our store we will create a Redux store:
+Now, instead of creating our store we will create a Redux store in `dom.js`:
 
 ```js
 const store = Redux.createStore(app)
@@ -1893,7 +1903,7 @@ const store = Redux.createStore(Redux.combineReducers({
 
 Donald Trump is suing us for defamation. We need to display a warning whenever we add him to our state.
 
-We could resolve this by creating a function:
+(Demo only) We could resolve this by creating a function in `scripts.js`:
 
 ```js
 function checkAndDispatch (store, action) {
@@ -1977,7 +1987,9 @@ A better way would be to hook into the moment between when an action is dispatch
 
 Middleware is code you can put between the framework receiving a request, and the framework generating a response. It can be used for error reporting and routing.
 
-`return next(action)`
+(End demo.)
+
+Here's an example in `scripts.js`:
 
 ```js
 function checker (store) {
@@ -2008,12 +2020,12 @@ Delete the checkAndDispatch function and replace the `checkAndDispatch(store,` c
 
 Tell Redux about the middleware.
 
-```js
+<!-- ```js
 const store = Redux.createStore(Redux.combineReducers({
   pirates,
   weapons
 }))
-```
+``` -->
 
 ```js
 const store = Redux.createStore(Redux.combineReducers({
@@ -2062,7 +2074,9 @@ Here are some popular packages in the Redux ecosystem that are implemented via m
 
 ## Logging Middleware
 
-We will log the action and the state to the console using middleware.
+We will log the action and the state to the console using middleware. This will help us track our actions and the state that is being returned.
+
+In `scripts`:
 
 ```js
 const logger = (store) => (next) => (action) => {
@@ -2074,6 +2088,8 @@ const logger = (store) => (next) => (action) => {
   return result
 }
 ```
+
+In `dom.js`:
 
 ```js
 const store = Redux.createStore(Redux.combineReducers({
@@ -2116,7 +2132,7 @@ ReactDOM.render(
 )
 ```
 
-Add List, Weapons and Pirates components and render them via the App.
+Add stubs for List, Weapons and Pirates components:
 
 ```js
 function List (props) {
@@ -2148,7 +2164,11 @@ class Weapons extends React.Component {
     )
   }
 }
+```
 
+And render them via the App:
+
+```js
 class App extends React.Component {
   render(){
     return(
@@ -2159,16 +2179,11 @@ class App extends React.Component {
     )
   }
 }
-
-ReactDOM.render(
-  <App />,
-  document.getElementById('app')
-)
 ```
 
 ## Adding Items
 
-Recall the `addPirate` function in the vanilla js portion:
+Recall the `addPirate` function in the `dom.js` script:
 
 ```js
 function addPirate(){
@@ -2207,7 +2222,7 @@ class Pirates extends React.Component {
 }
 ```
 
-Then the addItem function:
+Then add the addItem function:
 
 ```js
 class Pirates extends React.Component {
@@ -2234,7 +2249,7 @@ class Pirates extends React.Component {
 }
 ```
 
-Pass props to the Pirate component from App
+Pass the store to the Pirate component via props from App
 
 ```js
 class App extends React.Component {
@@ -2247,14 +2262,9 @@ class App extends React.Component {
     )
   }
 }
-
-ReactDOM.render(
-  <App store={store} />,
-  document.getElementById('app')
-)
 ```
 
-Complete the addItem function
+Now that the Pirates component has access to store we can complete the addItem function:
 
 ```js
 addItem = (e) => {
@@ -2269,7 +2279,7 @@ addItem = (e) => {
 }
 ```
 
-The weapons component.
+Pass store as props to the weapons component.
 
 ```js
 class App extends React.Component {
@@ -2283,6 +2293,8 @@ class App extends React.Component {
   }
 }
 ```
+
+Edit Weapons to add an input field and button as well:
 
 ```js
 class Weapons extends React.Component {
@@ -2335,7 +2347,7 @@ class Weapons extends React.Component {
 }
 ```
 
-Rendering the Lists
+Now, in order to get the fields to work we will render the Lists.
 
 Grab the Pirates and the Weapons and pass them to the components:
 
