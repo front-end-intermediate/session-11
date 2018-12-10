@@ -2174,7 +2174,7 @@ function addPirate(){
 }
 ```
 
-Implement this is the Pirates component.
+Implement this is the Pirates component using React.
 
 First the return:
 
@@ -2247,16 +2247,16 @@ ReactDOM.render(
 Complete the addItem function
 
 ```js
-  addItem = (e) => {
-    e.preventDefault()
-    const name = this.input.value
-    this.input.value = ''
-    this.props.store.dispatch(addPirateAction({
-      id: generateId,
-      name,
-      complete: false
-    }))
-  }
+addItem = (e) => {
+  e.preventDefault()
+  const name = this.input.value
+  this.input.value = ''
+  this.props.store.dispatch(addPirateAction({
+    id: generateId,
+    name,
+    complete: false
+  }))
+}
 ```
 
 The weapons component.
