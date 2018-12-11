@@ -3,9 +3,18 @@ const REMOVE_PIRATE = 'REMOVE_PIRATE'
 const TOGGLE_PIRATE = 'TOGGLE_PIRATE'
 const ADD_WEAPON = 'ADD_WEAPON'
 const REMOVE_WEAPON = 'REMOVE_WEAPON'
+const RECEIVE_DATA = 'RECEIVE_DATA'
 
 function generateId(){
   return Date.now()
+}
+
+function receiveDataAction( pirates, weapons) {
+  return {
+    type: RECEIVE_DATA,
+    pirates,
+    weapons
+  }
 }
 
 function addPirateAction(pirate){
@@ -49,6 +58,8 @@ function pirates (state = [], action) {
     return state.map((pirate) => pirate.id !== action.id ? pirate :
     Object.assign({}, pirate, {complete: !pirate.complete})
     )
+    case RECEIVE_DATA:
+      return action.pirates
     default :
     return state
   }
@@ -59,7 +70,9 @@ function weapons (state = [], action) {
     case ADD_WEAPON :
     return state.concat([action.weapon])
     case REMOVE_WEAPON :
-    return state.filter((weapon) => weapon.id !== action.id)
+      return state.filter((weapon) => weapon.id !== action.id)
+    case RECEIVE_DATA:
+      return action.weapons
     default :
     return state
   }
@@ -88,4 +101,13 @@ const logger = (store) => (next) => (action) => {
   console.log('The new state: ', store.getState())
   console.groupEnd()
   return result
+}
+
+function loading(state = true, action) {
+  switch (action.type) {
+    case RECEIVE_DATA:
+      return false
+    default:
+      return state
+  }
 }

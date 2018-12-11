@@ -1,3 +1,9 @@
+const store = Redux.createStore(Redux.combineReducers({
+  pirates,
+  weapons,
+  loading
+}), Redux.applyMiddleware(checker, logger))
+
 function List(props) {
   return (
     <ul>
@@ -13,6 +19,7 @@ function List(props) {
     </ul>
   )
 }
+
 class Pirates extends React.Component {
   addItem = (e) => {
     e.preventDefault()
@@ -87,17 +94,30 @@ class Weapons extends React.Component {
     )
   }
 }
-// make the store available to Pirates
+
 class App extends React.Component {
 
   componentDidMount () {
     const { store } = this.props
+  
+    Promise.all([
+      API.fetchPirates(),
+      API.fetchWeapons()
+    ]).then( ([pirates, weapons]) => {
+      store.dispatch(receiveDataAction(pirates, weapons))
+      })
+    
     store.subscribe( () => this.forceUpdate())
   }
 
   render(){
     const { store } = this.props
-    const { pirates, weapons } = store.getState()
+    const { pirates, weapons, loading } = store.getState()
+
+    if (loading === true) {
+      return <h3>Loading...</h3>
+    }
+
     return(
       <React.Fragment>
         <Pirates pirates={pirates} store ={store} />
