@@ -1,0 +1,41 @@
+<html>
+<head>
+  <title>Pirates/Weapons</title>
+  <script src='https://unpkg.com/react@16.3.0-alpha.1/umd/react.development.js'></script>
+  <script src='https://unpkg.com/react-dom@16.3.0-alpha.1/umd/react-dom.development.js'></script>
+  <script src='https://unpkg.com/babel-standalone@6.15.0/babel.min.js'></script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/redux/3.7.2/redux.min.js'></script>
+
+  <link href="https://fonts.googleapis.com/css?family=Pirata+One" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+
+  <div class="header">
+    <img src="img/anchor.svg" class="logo" alt="logo" />
+    <h1>Pirate Hunter</h1>
+  </div>
+
+  <div>
+    <h1>Pirate List</h1>
+    <input id='pirate' type='text' placeholder="Add Pirate">
+    <button id='pirateBtn'>Add Pirate</button>
+    <ul id='pirates'></ul>
+  </div>
+  
+  <div>
+    <h1>Weapon List</h1>
+    <input id='weapon' type='text' placeholder="Add Weapon">
+    <button id='weaponBtn'>Add Weapon</button>
+    <ul id='weapons'></ul>
+  </div>
+
+  <hr />
+<div id="app"></div>
+
+  <script type='text/javascript' src="js/scripts.js"></script>
+  <script src="js/dom.js"></script>
+  <script type="text/babel" src="js/react-babel.js"></script>
+</body>
+</html>
